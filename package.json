@@ -1,0 +1,10 @@
+{
+  "name": "nodejs-streams",
+  "description": "",
+  "version": "0.1.0",
+  "dependencies": {},
+  "devDependencies": {
+    "serverless-plugin-typescript": "^1.1.9",
+    "typescript": "^4.3.5"
+  }
+}
