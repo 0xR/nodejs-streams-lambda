@@ -8,8 +8,27 @@ provider:
   lambdaHashingVersion: 20201221
 
 functions:
-  hello:
-    handler: handler.hello
+  nodejs-streams:
+    handler: src/main.handler
 
 plugins:
   - serverless-plugin-typescript
+
+resources:
+  Resources:
+    usersTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: usersTable
+        AttributeDefinitions:
+          - AttributeName: PK0
+            AttributeType: S
+          - AttributeName: SK0
+            AttributeType: S
+        KeySchema:
+          - AttributeName: PK0
+            KeyType: HASH
+          - AttributeName: SK0
+            KeyType: RANGE
+        BillingMode: PAY_PER_REQUEST
+
