@@ -6,7 +6,7 @@ import { createMeasurer, getRate } from './measure';
 
 const userMeasurer = createMeasurer('users');
 
-const userCount = 20e3;
+const userCount = 100e3;
 
 function createReadable(): Readable {
   let startKey: Key | undefined = undefined;
@@ -14,7 +14,6 @@ function createReadable(): Readable {
   return new Readable({
     async read(size) {
       try {
-        i > 0 && console.timeEnd('fetchIdleness');
         const userResult = await getUsers(size, startKey);
         if (i === 0) {
           this.push('<users>\n');
@@ -32,14 +31,13 @@ function createReadable(): Readable {
           userMeasurer.measure();
           i++;
         }
-        console.time('fetchIdleness');
       } catch (e) {
         this.emit('error', e);
         userMeasurer.stop();
         this.push(null);
       }
     },
-    highWaterMark: 1e3,
+    highWaterMark: 10e3,
   });
 }
 

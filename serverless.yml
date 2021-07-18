@@ -35,6 +35,7 @@ provider:
 
 functions:
   nodejs-streams:
+    timeout: 900
     handler: src/main.handler
 
 plugins:
