@@ -1,3 +1,9 @@
+export function getRate(start: number, stop: number, count) {
+  const end = Date.now();
+  const seconds = (end - start) / 1e3;
+  return count / seconds;
+}
+
 export function createMeasurer(name: string) {
   let timeStamp: null | number = null;
   let count = 0;
@@ -12,8 +18,8 @@ export function createMeasurer(name: string) {
     }
 
     const end = Date.now();
-    const seconds = (end - timeStamp) / 1e3;
-    const rate = count / seconds;
+    const rate = getRate(timeStamp, end, count);
+
     console.log(
       `[${new Date().toLocaleTimeString('nl-NL')}] ${name} - Rate ${Math.round(
         rate,
@@ -32,7 +38,7 @@ export function createMeasurer(name: string) {
       count++;
     },
     stop() {
-      clearInterval(intervalId)
+      clearInterval(intervalId);
     },
   };
 }

@@ -2,14 +2,15 @@ import { Readable } from 'stream';
 import { getUsers, Key } from './dynamodb';
 import { writeToS3 } from './s3';
 import { toXml } from './xml';
-import { createMeasurer } from './measure';
+import { createMeasurer, getRate } from './measure';
 
 const userMeasurer = createMeasurer('users');
+
+const userCount = 20e3;
 
 function createReadable(): Readable {
   let startKey: Key | undefined = undefined;
   let i = 0;
-  const max = 10e3;
   return new Readable({
     async read(size) {
       try {
@@ -20,9 +21,11 @@ function createReadable(): Readable {
         }
         startKey = userResult.lastKey;
         for (const user of userResult.users) {
-          if (i > max) {
+          if (i > userCount) {
             this.push('</users>');
-            break;
+            userMeasurer.stop();
+            this.push(null);
+            return;
           }
           var xmlString = toXml('user', user);
           this.push(xmlString + '\n');
@@ -32,7 +35,6 @@ function createReadable(): Readable {
         console.time('fetchIdleness');
       } catch (e) {
         this.emit('error', e);
-      } finally {
         userMeasurer.stop();
         this.push(null);
       }
@@ -42,11 +44,13 @@ function createReadable(): Readable {
 }
 
 export async function handler() {
-  console.time('runtime')
+  const start = Date.now();
   const readable = createReadable();
   await writeToS3(readable);
-  console.timeEnd('runtime')
+  const rate = getRate(start, Date.now(), userCount);
   return {
     result: 'done',
+    rate: Math.round(rate),
+    secondsFor100k: Math.round(100e3 / rate),
   };
 }
