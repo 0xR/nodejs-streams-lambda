@@ -1,4 +1,4 @@
-import { Readable } from 'stream';
+import { Readable, Transform } from 'stream';
 import { getUsers, Key } from './dynamodb';
 import { writeToS3 } from './s3';
 import { toXml } from './xml';
@@ -6,28 +6,24 @@ import { createMeasurer, getRate } from './measure';
 
 const userMeasurer = createMeasurer('users');
 
-const userCount = 100e3;
+const userCount = 30e3;
 
 function createReadable(): Readable {
   let startKey: Key | undefined = undefined;
   let i = 0;
   return new Readable({
+    objectMode: true,
     async read(size) {
       try {
         const userResult = await getUsers(size, startKey);
-        if (i === 0) {
-          this.push('<users>\n');
-        }
         startKey = userResult.lastKey;
         for (const user of userResult.users) {
           if (i > userCount) {
-            this.push('</users>');
             userMeasurer.stop();
             this.push(null);
             return;
           }
-          var xmlString = toXml('user', user);
-          this.push(xmlString + '\n');
+          this.push(user);
           userMeasurer.measure();
           i++;
         }
@@ -41,10 +37,33 @@ function createReadable(): Readable {
   });
 }
 
+function createXmlTransform() {
+  let firstChunk = true;
+  const transform = new Transform({
+    writableObjectMode: true,
+
+    transform(user, encoding, callback) {
+      if (firstChunk) {
+        this.push('<users>\n');
+        firstChunk = false;
+      }
+      var xmlString = toXml('user', user);
+      this.push(xmlString + '\n');
+      callback();
+      return;
+    },
+  });
+  transform._flush = function (callback) {
+    this.push('</users>');
+    callback();
+  };
+  return transform;
+}
+
 export async function handler() {
   const start = Date.now();
-  const readable = createReadable();
-  await writeToS3(readable);
+  const xmlStream = createReadable().pipe(createXmlTransform());
+  await writeToS3(xmlStream);
   const rate = getRate(start, Date.now(), userCount);
   return {
     result: 'done',
