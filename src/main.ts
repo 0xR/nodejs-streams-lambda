@@ -6,7 +6,7 @@ import { createMeasurer, getRate } from './measure';
 
 const userMeasurer = createMeasurer('users');
 
-const userCount = 30e3;
+const userCount = 100e3;
 
 function createReadable(): Readable {
   let startKey: Key | undefined = undefined;
@@ -33,6 +33,8 @@ function createReadable(): Readable {
         this.push(null);
       }
     },
+    // Determines size of buffer and size of DynamoDB limit
+    // Should be larger than a dynamodb result size without limit
     highWaterMark: 10e3,
   });
 }
@@ -41,7 +43,6 @@ function createXmlTransform() {
   let firstChunk = true;
   const transform = new Transform({
     writableObjectMode: true,
-
     transform(user, encoding, callback) {
       if (firstChunk) {
         this.push('<users>\n');
