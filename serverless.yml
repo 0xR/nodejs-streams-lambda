@@ -9,6 +9,10 @@ provider:
   lambdaHashingVersion: 20201221
   environment:
     DYNAMODB_TABLE: ${self:service}-${sls:stage}
+    S3_BUCKET: ${self:service}-${sls:stage}
+  s3:
+    outputBucket:
+      name: ${self:provider.environment.S3_BUCKET}
 
 functions:
   nodejs-streams:
@@ -34,4 +38,3 @@ resources:
           - AttributeName: SK0
             KeyType: RANGE
         BillingMode: PAY_PER_REQUEST
-
