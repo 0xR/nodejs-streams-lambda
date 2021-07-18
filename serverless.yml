@@ -4,8 +4,11 @@ frameworkVersion: '2'
 
 provider:
   name: aws
+  region: eu-west-1
   runtime: nodejs14.x
   lambdaHashingVersion: 20201221
+  environment:
+    DYNAMODB_TABLE: ${self:service}-${sls:stage}
 
 functions:
   nodejs-streams:
@@ -19,7 +22,7 @@ resources:
     usersTable:
       Type: AWS::DynamoDB::Table
       Properties:
-        TableName: usersTable
+        TableName: ${self:provider.environment.DYNAMODB_TABLE}
         AttributeDefinitions:
           - AttributeName: PK0
             AttributeType: S
