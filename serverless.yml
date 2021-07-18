@@ -2,17 +2,36 @@ service: nodejs-streams
 
 frameworkVersion: '2'
 
+custom:
+  tableName: ${self:service}-${sls:stage}
+  bucketName: ${self:service}-${sls:stage}
+
 provider:
   name: aws
   region: eu-west-1
   runtime: nodejs14.x
   lambdaHashingVersion: 20201221
   environment:
-    DYNAMODB_TABLE: ${self:service}-${sls:stage}
-    S3_BUCKET: ${self:service}-${sls:stage}
-  s3:
-    outputBucket:
-      name: ${self:provider.environment.S3_BUCKET}
+    DYNAMODB_TABLE: ${self:custom.tableName}
+    S3_BUCKET: ${self:custom.bucketName}
+  iam:
+    role:
+      statements:
+        - Effect: Allow
+          Action:
+            - dynamodb:*
+          Resource:
+            - Fn::GetAtt: [usersTable, Arn]
+        - Effect: Allow
+          Action:
+            - s3:*
+          Resource:
+            - Fn::Join:
+                - '/'
+                - - Fn::GetAtt:
+                      - outputBucket
+                      - Arn
+                  - '*'
 
 functions:
   nodejs-streams:
@@ -26,7 +45,7 @@ resources:
     usersTable:
       Type: AWS::DynamoDB::Table
       Properties:
-        TableName: ${self:provider.environment.DYNAMODB_TABLE}
+        TableName: ${self:custom.tableName}
         AttributeDefinitions:
           - AttributeName: PK0
             AttributeType: S
@@ -38,3 +57,7 @@ resources:
           - AttributeName: SK0
             KeyType: RANGE
         BillingMode: PAY_PER_REQUEST
+    outputBucket:
+      Type: AWS::S3::Bucket
+      Properties:
+        BucketName: ${self:custom.bucketName}

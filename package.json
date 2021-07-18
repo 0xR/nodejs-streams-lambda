@@ -3,11 +3,12 @@
   "description": "",
   "version": "0.1.0",
   "dependencies": {
-    "@aws-sdk/client-dynamodb": "^3.22.0"
-  },
-  "devDependencies": {
+    "@aws-sdk/client-dynamodb": "^3.22.0",
     "@aws-sdk/lib-dynamodb": "^3.22.0",
     "@aws-sdk/util-dynamodb": "^3.22.0",
+    "xml2js": "^0.4.23"
+  },
+  "devDependencies": {
     "@types/faker": "^5.5.7",
     "@types/jest": "^26.0.24",
     "@types/uuid": "^8.3.1",

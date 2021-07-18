@@ -9,5 +9,8 @@ export async function writeToS3(body: S3.Body) {
       Body: body,
     },
   });
+  managedUpload.on('httpUploadProgress', (progress) => {
+    console.log(`[${new Date().toLocaleString('nl-NL')}]`, progress);
+  });
   await managedUpload.promise();
 }

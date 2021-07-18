@@ -11,7 +11,7 @@ const limit = pLimit(100);
 const client = new DynamoDBClient({ region: 'eu-west-1' });
 const ddbDocClient = DynamoDBDocumentClient.from(client);
 
-const measureCreation = createMeasurer();
+const measureCreation = createMeasurer('seed dynamo');
 
 async function addUser() {
   await ddbDocClient.send(
